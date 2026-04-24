@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>National Library | Dashboard</title>
+    <style>
+        /* ---------- RESET & BASE ---------- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: #bcd6f0;
+            color: #1e2f3e;
+        }
+        /* ---------- FIXED SIDEBAR ---------- */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 220px;
+            height: 100%;
+            background: #2c3e66;
+            color: #f0f4fa;
+            padding: 2rem 1rem;
+            z-index: 100;
+            box-shadow: 2px 0 12px rgba(0,0,0,0.1);
+        }
+
+        .sidebar h3 {
+            margin-bottom: 2rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            border-left: 4px solid #ffcd3c;
+            padding-left: 12px;
+        }
+
+        .sidebar nav ul{
+            list-style: none;
+        }
+
+        .sidebar nav ul li {
+            margin: 1rem 0;
+        }
+        /* ::before for nav icons */
+        .sidebar nav ul li:nth-child(2) a::before {
+            content: "📘 ";
+            margin-right: 10px;
+        }
+
+        .sidebar nav ul li:nth-child(3) a::before {
+            content: "🧑🏾‍🎓 ";
+            margin-right: 10px;
+        }
+        
+        .sidebar nav ul li:nth-child(4) a::before {
+            content: "👩‍🏫";
+            margin-right: 10px;
+        }
+
+        .sidebar nav ul li:first-child a::before {
+            content: "🏠 ";
+        }
+        /* inline-block requirement: navigation links use inline-block */
+        .sidebar nav ul li a {
+            display: inline-block;
+            width: 90%;
+            color: #e6edf4;
+            text-decoration: none;
+            padding: 8px 12px;
+            border-radius: 40px;
+            transition: 0.2s;
+        }
+        /* hover on nav links — exclude active using :not() */
+        .sidebar nav ul li a:not(.active):hover {
+            background: #4a6a8e;
+            color: white;
+            padding-left: 18px;
+        }
+
+        .sidebar nav ul li a.active {
+            background: #ffcd3c;
+            color: #2c3e66;
+            font-weight: bold;
+        }
+        /* ---------- SIDEBAR TOGGLE (CHECKBOX HACK) ---------- */
+        #toggle-sidebar {
+            display: none;
+        }
+
+        .toggle-label {
+            position: fixed;
+            top: 16px;
+            left: 16px;
+            background: #2c3e66;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 40px;
+            cursor: pointer;
+            z-index: 200;
+            font-size: 0.8rem;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+
+        .toggle-label:hover {
+            background: #ffcd3c;
+            color: #2c3e66;
+        }
+
+        #toggle-sidebar:checked ~ .sidebar {
+            width: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        #toggle-sidebar:checked ~ .main-content {
+            margin-left: 0;
+        }
+        /* ---------- MAIN CONTENT (margin-left clears sidebar) ---------- */
+        .main-content {
+            margin-left: 220px;
+            padding: 1.5rem;
+            transition: margin-left 0.2s;
+        }
+        /* ---------- HEADER + DROPDOWN (absolute) ---------- */
+        .top-bar {
+            background: white;
+            padding: 0.8rem 1.8rem;
+            border-radius: 60px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+
+        .profile {
+            position: relative;
+        }
+
+        .profile-trigger {
+            background: #ecf3f9;
+            padding: 6px 20px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 500;
+            display: inline-block;  
+        }
+
+        .dropdown {
+            position: absolute;
+            top: 44px;
+            right: 0;
+            background: white;
+            min-width: 160px;
+            border-radius: 20px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+            list-style: none;
+            display: none;
+            z-index: 150;
+        }
+
+        .profile:hover .dropdown {
+            display: block;
+        }
+
+        .dropdown li {
+            padding: 8px 18px;
+        }
+
+        .dropdown li a {
+            text-decoration: none;
+            color: #2c3e66;
+        }
+
+        .dropdown li:hover {
+            background: #f0f6fd;
+        }
+        /* ---------- BOOK CARDS (float: left, multi-column) ---------- */
+        .section-title {
+            margin: 1.8rem 0 1rem 0;
+            font-weight: 700;
+            border-left: 6px solid #ffcd3c;
+            padding-left: 14px;
+        }
+
+        .cards-wrapper {
+            margin-bottom: 1rem;
+        }
+        /* clearfix ::after */
+        .cards-wrapper::after {
+            content: "";
+            display: table;
+            clear: both;
+        }
+
+        .card {
+            float: left;
+            width: calc(33.333% - 1rem);
+            margin: 0 0.5rem 1.2rem 0.5rem;
+            background: rgb(206, 214, 228);
+            border-radius: 24px;
+            padding: 1rem 1rem 1.2rem 1rem;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            border: 1px solid #e2edf5;
+            transition: 0.2s;
+        }
+        /* status badge ::before */
+        .card::before {
+            content: "●";
+            color: #2b7a4b;
+            margin-right: 8px;
+            font-size: 0.9rem;
+        }
+
+        .card h4 {
+            margin: 6px 0 4px;
+            font-size: 1.05rem;
+        }
+
+        .card p {
+            font-size: 0.8rem;
+            color: #4e6a7e;
+        }
+
+        .card button {
+            margin-top: 12px;
+            background: #ffcd3c;
+            border: none;
+            padding: 6px 16px;
+            border-radius: 40px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.8rem;
+            transition: 0.1s;
+        }
+
+        .card button:hover {
+            background: #e0b42c;
+            transform: scale(0.96);
+        }
+        /* empty card placeholder */
+        .card:empty {
+            background: #e6ecf1;
+            border: 2px dashed #bdd3e6;
+            min-height: 140px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .card:empty::before {
+            content: "📭 New book slot";
+            color: #7f95ab;
+            font-size: 0.8rem;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 20px rgba(0,0,0,0.1);
+        }
+        /* responsive: 2 columns on smaller */
+        @media (max-width: 800px) {
+            .card {
+                width: calc(50% - 1rem);
+            }
+        }
+        /* ---------- ADD NEW BOOK FORM ---------- */
+        .form-box {
+            background: white;
+            border-radius: 28px;
+            padding: 1.5rem 2rem;
+            margin: 2rem 0;
+            border: 1px solid #e2edf5;
+        }
+
+        .form-group {
+            margin-bottom: 1.2rem;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+        /* required asterisk ::after */
+        label.required::after {
+            content: " *";
+            color: #d9534f;
+            font-weight: bold;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: 30px;
+            border: 1.5px solid #dce5ef;
+            font-family: inherit;
+            background: #fff;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #ffcd3c;
+            box-shadow: 0 0 0 3px rgba(255,205,60,0.2);
+        }
+        /* :valid / :invalid styles */
+        input:required:invalid, select:required:invalid, textarea:required:invalid {
+            border-left: 5px solid #0ee66c;
+        }
+        input:required:valid, select:required:valid, textarea:required:valid {
+            border-left: 5px solid #2b7a4b;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 14px;
+            margin-top: 1.2rem;
+        }
+
+        .btn {
+            padding: 8px 26px;
+            border-radius: 40px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.1s;
+        }
+
+        .btn-add {
+            background: #2c3e66;
+            color: white;
+        }
+        .btn-add:hover {
+            background: #ffcd3c;
+            color: #2c3e66;
+        }
+        .btn-add:active {
+            transform: scale(0.96);
+        }
+
+        .btn-cancel {
+            background: #e2eaf1;
+            color: #2c3e66;
+        }
+        .btn-cancel:hover {
+            background: #cbdae5;
+        }
+        .btn-cancel:active {
+            transform: scale(0.96);
+        }
+        /* ---------- RECENTLY CHECKED OUT TABLE (library members) ---------- */
+        .table-box {
+            background: white;
+            border-radius: 28px;
+            padding: 1rem 1.2rem;
+            margin-top: 1rem;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 12px 8px;
+            border-bottom: 1px solid #e6edf4;
+        }
+        /* zebra stripes */
+        tbody tr:nth-child(even) {
+            background-color: #fafcff;
+        }
+        /* first table row special */
+        tbody tr:first-child {
+            background: #fff6e0;
+            font-weight: 500;
+        }
+        /* ---------- MODAL (fixed overlay, :target) ---------- */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.75);
+            backdrop-filter: blur(3px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal:target {
+            display: flex;
+        }
+
+        .modal-card {
+            background: white;
+            max-width: 460px;
+            width: 90%;
+            border-radius: 36px;
+            padding: 2rem;
+            position: relative;
+            z-index: 1010;
+            animation: fadeIn 0.2s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.96);}
+            to { opacity: 1; transform: scale(1);}
+        }
+
+        .modal-card h3 {
+            margin-bottom: 1.2rem;
+            font-size: 1.6rem;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 16px;
+            right: 22px;
+            text-decoration: none;
+            font-size: 1.8rem;
+            color: #8f9eb2;
+        }
+        /* tooltip arrow example ::after */
+        .info-badge {
+            display: inline-block;
+            background: #eef3f9;
+            font-size: 0.7rem;
+            border-radius: 60px;
+            padding: 2px 12px;
+            margin-left: 10px;
+            position: relative;
+            cursor: help;
+        }
+
+        .info-badge::after {
+            content: "Click 'Check Out' on any book card";
+            position: absolute;
+            bottom: 150%;
+            left: 0;
+            background: #2c3e66;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: 0.15s;
+            z-index: 200;
+        }
+
+        .info-badge:hover::after {
+            opacity: 1;
+            bottom: 180%;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 2.5rem;
+            font-size: 0.7rem;
+            color: #6f8eaa;
+            padding-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- SIDEBAR TOGGLE CHECKBOX (:checked) -->
+    <input type="checkbox" id="toggle-sidebar">
+    <label for="toggle-sidebar" class="toggle-label">☰ Menu</label>
+
+    <!-- FIXED SIDEBAR -->
+    <div class="sidebar">
+        <h3>📚 NationalLib</h3>
+        <nav>
+            <ul>
+                <li><a href="#" class="active">Dashboard</a></li>
+                <li><a href="#">Catalog</a></li>
+                <li><a href="#">Readers</a></li>
+                <li><a href="#">Librarians</a></li>
+            </ul>
+        </nav>
+    </div>
+
+    <!-- MAIN CONTENT (margin-left to clear sidebar) -->
+    <div class="main-content">
+        <!-- header + profile dropdown -->
+        <div class="top-bar">
+            <h2> BrookHouse National Library</h2>
+            <div class="profile">
+                <div class="profile-trigger">👩‍🏫 Mrs. Yator▼</div>
+                <ul class="dropdown">
+                    <li><a href="#">My Profile</a></li>
+                    <li><a href="#">Reports</a></li>
+                    <li><a href="#">Logout</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 1. BOOK CARDS DISPLAY (float columns) -->
+        <div class="section-title">
+            📖 Readers Favorites <span class="info-badge">ⓘ</span>
+        </div>
+        <div class="cards-wrapper">
+            <div class="card">
+                <h4>The Guns of August</h4>
+                <p><i>Barbara Tuchman . Historical</i></p>
+                <a href="#checkoutModal" style="text-decoration: none;"><button>📌 Check Out</button></a>
+            </div>
+            <div class="card">
+                <h4>Critique of Pure Reasons</h4>
+                <p><i>Immaniel Kant . Philosophical</i></p>
+                <a href="#checkoutModal" style="text-decoration: none;"><button>📌 Check Out</button></a>
+            </div>
+            <div class="card">
+                <h4>The Intelligent Investor</h4>
+                <p><i>Benjamin Graham . Investment</i></p>
+                <a href="#checkoutModal" style="text-decoration: none;"><button>📌 Check Out</button></a>
+            </div>
+            <div class="card">
+                <h4>On Writing</h4>
+                <p><i>Stephen King . Novelists</i></p>
+                <a href="#checkoutModal" style="text-decoration: none;"><button>📌 Check Out</button></a>
+            </div>
+            <div class="card">
+                <h4>Man's Searching fof Meaning</h4>
+                <p><i>Victor E. Frank . Psychological</i></p>
+                <a href="#checkoutModal" style="text-decoration: none;"><button>📌 Check Out</button></a>
+            </div>
+            <div class="card">
+                <h4>Zero To One</h4>
+                <p><i>Peter Thiel . Entrepreneural</i></p>
+                <a href="#checkoutModal" style="text-decoration: none;"><button>📌 Check Out</button></a>
+            </div>
+             <!-- empty card placeholder (:empty) -->
+            <div class="card"></div>
+        </div>
+
+        <!-- 2. ADD NEW BOOK FORM -->
+        <div class="form-box">
+
+            <h3>➕ Add New Book</h3>
+            <form action="#" method="post">
+                <div class="form-group">
+                    <label class="required" for="title">Book Title</label>
+                    <input type="text" id="title" name="title" required placeholder="e.g., Wonder">
+                </div>
+                <div class="form-group">
+                    <label class="required" for="author">Author</label>
+                    <input type="text" id="author" name="author" required placeholder="Author name">
+                </div>
+                <div class="form-group">
+                    <label for="audience">Target Readers</label>
+                    <select id="audience" name="audience">
+                        <option value="Historians">Historians</option>
+                        <option value="Philosopher">Philosophers</option>
+                        <option value="Investors">Investors</option>
+                        <option value="Novelists">Novelists</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="desc">Description / Subject</label>
+                    <textarea id="desc" rows="2" placeholder="Brief summary for national library"></textarea>
+                </div>
+                <div class="btn-group">
+                    <button type="submit" class="btn btn-add">Add Book</button>
+                    <button type="reset" class="btn btn-cancel">Cancel</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- 3. RECENTLY CHECKED OUT TABLE -->
+        <div class="section-title">📋 Recently Checked Out</div>
+        <div class="table-box">
+            <table>
+                <thead>
+                    <tr><th>Book Title</th><th>Reader's Name</th><th>Checkout Date</th><th>Return Due</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>On Writing</td><td>Liam Garcia</td><td>2026-04-17</td><td>2026-05-01</td></tr>
+                    <tr><td>Crirtique of Pure Reason</td><td>Sophia Chen</td><td>2026-04-16</td><td>2026-04-30</td></tr>
+                    <tr><td>Zero To One</td><td>Oliver Zhang</td><td>2026-04-14</td><td>2026-04-28</td></tr>
+                    <tr><td>The Guns of August</td><td>Mia Patel</td><td>2026-04-12</td><td>2026-04-26</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <footer>© BrookHouse National Library · All requirements met</footer>
+    </div>
+
+    <!-- MODAL POPUP (Check Out Book) — :target -->
+    <div id="checkoutModal" class="modal">
+        <div class="modal-card">
+            <a href="#" class="close-modal">&times;</a>
+            <h3>📘 Check Out (Library Copy)</h3>
+            <form action="#">
+                <div class="form-group">
+                    <label class="required" for="modalTitle">Book Title</label>
+                    <input type="text" id="modalTitle" required placeholder="Enter book title">
+                </div>
+                <div class="form-group">
+                    <label class="required" for="studentName">Reader's Name</label>
+                    <input type="text" id="studentName" required placeholder="Full name (grade & class)">
+                </div>
+                <div class="form-group">
+                    <label for="returnDate">Due Date</label>
+                    <input type="date" id="returnDate">
+                </div>
+                <div class="btn-group">
+                    <button type="submit" class="btn btn-add">Confirm Checkout</button>
+                    <a href="#" style="text-decoration: none;"><button type="button" class="btn btn-cancel">Cancel</button></a>
+                </div>
+            </form>
+        </div>
+    </div>
